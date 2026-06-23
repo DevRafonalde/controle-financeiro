@@ -3,7 +3,7 @@ package br.com.devrafonalde.controle_financeiro.model.repositories;
 import br.com.devrafonalde.controle_financeiro.model.entities.TipoLancamento;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.CartaoORM;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.ContaORM;
-import br.com.devrafonalde.controle_financeiro.model.entities.orm.LancamentosORM;
+import br.com.devrafonalde.controle_financeiro.model.entities.orm.LancamentoORM;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.PessoaORM;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,12 +11,12 @@ import org.springframework.data.jpa.repository.Query;
 import java.math.BigDecimal;
 import java.util.List;
 
-public interface LancamentosRepository extends JpaRepository<LancamentosORM, Long> {
-    List<LancamentosORM> findByMesAnoOrderByDataAsc(String mesAno);
-    List<LancamentosORM> findByMesAnoAndPessoa(String mesAno, PessoaORM pessoa);
-    List<LancamentosORM> findByMesAnoAndTipo(String mesAno, TipoLancamento tipo);
-    List<LancamentosORM> findByCartaoAndMesAno(CartaoORM cartao, String mesAno);
-    List<LancamentosORM> findByContaAndMesAno(ContaORM conta, String mesAno);
+public interface LancamentosRepository extends JpaRepository<LancamentoORM, Long> {
+    List<LancamentoORM> findByMesAnoOrderByDataAsc(String mesAno);
+    List<LancamentoORM> findByMesAnoAndPessoa(String mesAno, PessoaORM pessoa);
+    List<LancamentoORM> findByMesAnoAndTipo(String mesAno, TipoLancamento tipo);
+    List<LancamentoORM> findByCartaoAndMesAno(CartaoORM cartao, String mesAno);
+    List<LancamentoORM> findByContaAndMesAno(ContaORM conta, String mesAno);
 
     // Saldo dinâmico de uma conta em um mês:
     // créditos - débitos - transferências saindo + transferências chegando

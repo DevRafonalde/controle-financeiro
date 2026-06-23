@@ -16,7 +16,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class LancamentosORM {
+public class LancamentoORM {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -1,10 +1,11 @@
 package br.com.devrafonalde.controle_financeiro.model.services;
 
-import br.com.devrafonalde.controle_financeiro.model.entities.dto.LancamentosDTO;
+import br.com.devrafonalde.controle_financeiro.model.entities.dto.LancamentoDTO;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.CartaoORM;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.ContaORM;
-import br.com.devrafonalde.controle_financeiro.model.entities.orm.LancamentosORM;
+import br.com.devrafonalde.controle_financeiro.model.entities.orm.LancamentoORM;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.PessoaORM;
+import br.com.devrafonalde.controle_financeiro.model.events.LancamentoSalvoEvent;
 import br.com.devrafonalde.controle_financeiro.model.repositories.CartaoRepository;
 import br.com.devrafonalde.controle_financeiro.model.repositories.ContaRepository;
 import br.com.devrafonalde.controle_financeiro.model.repositories.LancamentosRepository;
@@ -12,6 +13,7 @@ import br.com.devrafonalde.controle_financeiro.model.repositories.PessoaReposito
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,8 +26,9 @@ public class LancamentoService {
     private final CartaoRepository cartaoRepository;
     private final PessoaRepository pessoaRepository;
     private final ModelMapper modelMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public LancamentosDTO cadastrar(LancamentosDTO lancamento) {
+    public LancamentoDTO cadastrar(LancamentoDTO lancamento) {
         validar(lancamento);
 
         ContaORM conta = contaRepository.findById(lancamento.getConta().getId()).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada"));
@@ -33,7 +36,7 @@ public class LancamentoService {
         CartaoORM cartao = cartaoRepository.findById(lancamento.getCartao().getId()).orElseThrow(() -> new EntityNotFoundException("Cartão não encontrado"));
         PessoaORM pessoa = pessoaRepository.findById(lancamento.getPessoa().getId()).orElseThrow(() -> new EntityNotFoundException("Pessoa não encontrada"));
 
-        LancamentosORM lancamentoCadastrado = lancamentoRepository.save(LancamentosORM.builder()
+        LancamentoORM lancamentoCadastrado = lancamentoRepository.save(LancamentoORM.builder()
                 .conta(conta)
                 .data(lancamento.getData())
                 .cartao(cartao)
@@ -49,38 +52,42 @@ public class LancamentoService {
                 .build()
         );
 
-        return modelMapper.map(lancamentoCadastrado, LancamentosDTO.class);
+        eventPublisher.publishEvent(new LancamentoSalvoEvent(lancamentoCadastrado));
+
+        return modelMapper.map(lancamentoCadastrado, LancamentoDTO.class);
     }
 
-    public List<LancamentosDTO> listarPorMes(String mesAno) {
+    public List<LancamentoDTO> listarPorMes(String mesAno) {
         return lancamentoRepository.findByMesAnoOrderByDataAsc(mesAno).stream()
-                .map(lancamentosORM -> modelMapper.map(lancamentosORM, LancamentosDTO.class))
+                .map(lancamentoORM -> modelMapper.map(lancamentoORM, LancamentoDTO.class))
                 .toList();
     }
 
-    public List<LancamentosDTO> listarPorMesEPessoa(Long pessoaId, String mesAno) {
+    public List<LancamentoDTO> listarPorMesEPessoa(Long pessoaId, String mesAno) {
         PessoaORM pessoa = pessoaRepository.findById(pessoaId).orElseThrow(() -> new EntityNotFoundException("Pessoa não encontrada"));
         return lancamentoRepository.findByMesAnoAndPessoa(mesAno, pessoa).stream()
-                .map(lancamentosORM -> modelMapper.map(lancamentosORM, LancamentosDTO.class))
+                .map(lancamentoORM -> modelMapper.map(lancamentoORM, LancamentoDTO.class))
                 .toList();
     }
 
-    public List<LancamentosDTO> listarPorCartaoEMes(Long cartaoId, String mesAno) {
+    public List<LancamentoDTO> listarPorCartaoEMes(Long cartaoId, String mesAno) {
         CartaoORM cartao = cartaoRepository.findById(cartaoId).orElseThrow(() -> new EntityNotFoundException("Cartão não encontrado"));
         return lancamentoRepository.findByCartaoAndMesAno(cartao, mesAno).stream()
-                .map(lancamentosORM -> modelMapper.map(lancamentosORM, LancamentosDTO.class))
+                .map(lancamentoORM -> modelMapper.map(lancamentoORM, LancamentoDTO.class))
                 .toList();
     }
 
-    public LancamentosDTO buscarPorId(Long id) {
+    public LancamentoDTO buscarPorId(Long id) {
         return modelMapper.map(lancamentoRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Lançamento não encontrado: " + id)), LancamentosDTO.class);
+                .orElseThrow(() -> new EntityNotFoundException("Lançamento não encontrado: " + id)), LancamentoDTO.class);
     }
 
-    public LancamentosDTO atualizar(Long id, LancamentosDTO dados) {
+    public LancamentoDTO atualizar(Long id, LancamentoDTO dados) {
         validar(dados);
-        LancamentosORM lancamento = lancamentoRepository.findById(id)
+        LancamentoORM lancamento = lancamentoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Lançamento não encontrado: " + id));
+        String mesAnoAnterior = lancamento.getMesAno();
+
 
         ContaORM conta = contaRepository.findById(dados.getConta().getId()).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada"));
         ContaORM contaDestino = contaRepository.findById(dados.getConta().getId()).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada"));
@@ -101,14 +108,28 @@ public class LancamentoService {
         lancamento.setParcelaAtual(dados.getParcelaAtual());
         lancamento.setValorTotalCompra(dados.getValorTotalCompra());
 
-        return modelMapper.map(lancamentoRepository.save(lancamento), LancamentosDTO.class);
+        LancamentoORM salvo = lancamentoRepository.save(lancamento);
+
+        // Se o mês mudou, precisa disparar atualização do mês anterior também
+        if (!mesAnoAnterior.equals(salvo.getMesAno())) {
+            lancamento.setMesAno(mesAnoAnterior);
+            eventPublisher.publishEvent(new LancamentoSalvoEvent(lancamento));
+        }
+
+        eventPublisher.publishEvent(new LancamentoSalvoEvent(salvo));
+
+        return modelMapper.map(salvo, LancamentoDTO.class);
     }
 
     public void remover(Long id) {
-        lancamentoRepository.deleteById(id);
+        LancamentoORM lancamento = lancamentoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Lançamento não encontrado: " + id));
+        lancamentoRepository.delete(lancamento);
+        // Dispara atualização do mês do lançamento removido
+        eventPublisher.publishEvent(new LancamentoSalvoEvent(lancamento));
     }
 
-    private void validar(LancamentosDTO l) {
+    private void validar(LancamentoDTO l) {
         switch (l.getTipo()) {
             case DEBITO, CREDITO -> {
                 if (l.getConta() == null)

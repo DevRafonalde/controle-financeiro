@@ -10,7 +10,10 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -23,17 +26,31 @@ public class ResumoService {
     private final ModelMapper modelMapper;
 
     public ResumoMensal calcularResumo(String mesAno) {
-        BigDecimal totalReceitas  = lancamentoRepository.calcularReceitasTotais(mesAno);
-        BigDecimal totalDespesas  = lancamentoRepository.calcularDespesasTotais(mesAno);
-        BigDecimal totalFixos     = despesaFixaService.calcularTotalFixos();
-        BigDecimal saldo          = totalReceitas.subtract(totalDespesas).subtract(totalFixos);
+        YearMonth mesAnoYM = YearMonth.parse(mesAno,
+                DateTimeFormatter.ofPattern("MMM/yyyy", Locale.of("pt", "BR")));
+        boolean isMesAtual = mesAnoYM.equals(YearMonth.now());
+
+        BigDecimal totalReceitas = lancamentoRepository.calcularReceitasTotais(mesAno);
+        BigDecimal totalDespesas = lancamentoRepository.calcularDespesasTotais(mesAno);
+        BigDecimal totalFixos    = despesaFixaService.calcularTotalFixos();
+        BigDecimal saldo         = totalReceitas.subtract(totalDespesas).subtract(totalFixos);
 
         List<SaldoConta> saldosPorConta = contaRepository.findAll().stream()
                 .map(conta -> {
-                    BigDecimal saldoAtual = contaService.calcularSaldoAtual(conta.getId());
+                    BigDecimal saldoAtual = isMesAtual
+                            ? contaService.calcularSaldoAtual(conta.getId())
+                            : historicoSaldoRepository
+                            .findByContaAndMesAno(conta, mesAno)
+                            .map(HistoricoSaldoORM::getSaldoFinal)
+                            .orElse(BigDecimal.ZERO);
                     return new SaldoConta(conta, saldoAtual);
                 })
                 .toList();
+
+        // Inicializa histórico do mês se for a primeira consulta
+        if (!isMesAtual) {
+            inicializarHistoricoSeNecessario(mesAno);
+        }
 
         List<GastoPorCategoria> gastosPorCategoria = lancamentoRepository
                 .calcularTotalPorCategoria(mesAno)
@@ -52,24 +69,30 @@ public class ResumoService {
         );
     }
 
-    public void fecharMes(String mesAno) {
+    private void inicializarHistoricoSeNecessario(String mesAno) {
         contaRepository.findAll().forEach(conta -> {
             if (historicoSaldoRepository.existsByContaAndMesAno(conta, mesAno)) return;
 
-            BigDecimal saldoFinal = contaService.calcularSaldoAtual(conta.getId());
-            BigDecimal movimentacao = lancamentoRepository.calcularMovimentacaoNaMesAno(conta, mesAno);
-            BigDecimal saldoInicial = saldoFinal.subtract(movimentacao);
+            BigDecimal saldoInicial = historicoSaldoRepository
+                    .findMesAnterior(conta, mesAno)
+                    .map(HistoricoSaldoORM::getSaldoFinal)
+                    .orElse(conta.getSaldoInicial());
+
+            BigDecimal movimentacao = lancamentoRepository
+                    .calcularMovimentacaoNaMesAno(conta, mesAno);
+
+            BigDecimal totalFixas = despesaFixaService
+                    .calcularTotalFixosPorConta(conta.getId());
 
             HistoricoSaldoORM historico = new HistoricoSaldoORM();
             historico.setConta(conta);
             historico.setMesAno(mesAno);
             historico.setSaldoInicial(saldoInicial);
-            historico.setSaldoFinal(saldoFinal);
+            historico.setSaldoFinal(saldoInicial.add(movimentacao).subtract(totalFixas));
             historicoSaldoRepository.save(historico);
         });
     }
 
-    // Records para compor o retorno do resumo
     public record ResumoMensal(
             String mesAno,
             BigDecimal totalReceitas,

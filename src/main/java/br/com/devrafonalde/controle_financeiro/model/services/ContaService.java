@@ -2,7 +2,7 @@ package br.com.devrafonalde.controle_financeiro.model.services;
 
 import br.com.devrafonalde.controle_financeiro.model.entities.dto.ContaDTO;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.ContaORM;
-import br.com.devrafonalde.controle_financeiro.model.entities.orm.LancamentosORM;
+import br.com.devrafonalde.controle_financeiro.model.entities.orm.LancamentoORM;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.PessoaORM;
 import br.com.devrafonalde.controle_financeiro.model.repositories.ContaRepository;
 import br.com.devrafonalde.controle_financeiro.model.repositories.LancamentosRepository;
@@ -84,7 +84,7 @@ public class ContaService {
         return conta.getSaldoInicial().add(movimentacaoTotal);
     }
 
-    private BigDecimal calcularImpactoNaConta(LancamentosORM lancamento, ContaORM conta) {
+    private BigDecimal calcularImpactoNaConta(LancamentoORM lancamento, ContaORM conta) {
         return switch (lancamento.getTipo()) {
             case CREDITO -> lancamento.getConta().equals(conta)
                     ? lancamento.getValor()
