@@ -36,6 +36,11 @@ public class CategoriaService {
     }
 
     public CategoriaDTO atualizar(Long id, String novoNome) {
+        CategoriaDTO categoriaExistente = buscarPorId(id);
+        if (categoriaExistente.getNome().equals("Pagamento Fatura")) {
+            throw new IllegalArgumentException("A categoria \"Pagamento Fatura\" não pode ser removida.");
+        }
+
         if (categoriaRepository.existsByNome(novoNome)) {
             throw new IllegalArgumentException("Já existe uma categoria com esse nome.");
         }
@@ -46,6 +51,11 @@ public class CategoriaService {
     }
 
     public void remover(Long id) {
+        CategoriaDTO categoria = buscarPorId(id);
+        if (categoria.getNome().equals("Pagamento Fatura")) {
+            throw new IllegalArgumentException("A categoria \"Pagamento Fatura\" não pode ser removida.");
+        }
+
         categoriaRepository.deleteById(id);
     }
 }

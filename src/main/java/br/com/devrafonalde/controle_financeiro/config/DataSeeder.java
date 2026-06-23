@@ -3,9 +3,11 @@ package br.com.devrafonalde.controle_financeiro.config;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.CategoriaORM;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.TipoContaORM;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.TipoLancamentoORM;
+import br.com.devrafonalde.controle_financeiro.model.entities.orm.TipoPagamentoFaturaORM;
 import br.com.devrafonalde.controle_financeiro.model.repositories.CategoriaRepository;
 import br.com.devrafonalde.controle_financeiro.model.repositories.TipoContaRepository;
 import br.com.devrafonalde.controle_financeiro.model.repositories.TipoLancamentoRepository;
+import br.com.devrafonalde.controle_financeiro.model.repositories.TipoPagamentoFaturaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -19,6 +21,7 @@ public class DataSeeder implements ApplicationRunner {
     private final TipoContaRepository tipoContaRepository;
     private final TipoLancamentoRepository tipoLancamentoRepository;
     private final CategoriaRepository categoriaRepository;
+    private final TipoPagamentoFaturaRepository tipoPagamentoFaturaRepository;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -51,6 +54,7 @@ public class DataSeeder implements ApplicationRunner {
 
     private void seedCategorias() {
         List.of(
+                "Pagamento Fatura",     // não pode ser removida — usada internamente
                 "Alimentação", "Transporte", "Saúde", "Educação",
                 "Lazer", "Vestuário", "Mercado", "Moradia",
                 "Tecnologia", "Investimento", "Receita", "Outros"
@@ -61,5 +65,16 @@ public class DataSeeder implements ApplicationRunner {
                 categoriaRepository.save(categoria);
             }
         });
+    }
+
+    private void seedTiposPagamentoFatura() {
+        List.of("TOTAL", "PARCELADO", "PARCIAL")
+                .forEach(nome -> {
+                    if (!tipoPagamentoFaturaRepository.existsByNome(nome)) {
+                        TipoPagamentoFaturaORM tipo = new TipoPagamentoFaturaORM();
+                        tipo.setNome(nome);
+                        tipoPagamentoFaturaRepository.save(tipo);
+                    }
+                });
     }
 }

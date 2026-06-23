@@ -56,6 +56,11 @@ public class LancamentoORM {
     @JoinColumn(name = "pessoa_id")
     private PessoaORM pessoa;                  // quem realizou — pode ser qualquer pessoa
 
+    // Preenchido apenas em lançamentos gerados por pagamento de fatura
+    @ManyToOne
+    @JoinColumn(name = "pagamento_fatura_id")
+    private PagamentoFaturaORM pagamentoFatura;
+
     @Column(name = "num_parcelas")
     private Integer numParcelas;
 

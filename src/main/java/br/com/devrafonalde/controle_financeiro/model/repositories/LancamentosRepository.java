@@ -79,4 +79,16 @@ public interface LancamentosRepository extends JpaRepository<LancamentoORM, Long
         AND l.tipo.nome IN ('DEBITO', 'CARTAO')
     """)
     BigDecimal calcularDespesasTotais(String mesAno);
+
+    // Soma de lançamentos DEBITO gerados por pagamento de fatura
+    // com mesAno >= mesAno atual, para um cartão específico
+    // Representa o limite já comprometido por parcelamentos futuros
+        @Query("""
+        SELECT COALESCE(SUM(l.valor), 0)
+        FROM Lancamento l
+        WHERE l.pagamentoFatura.cartao = :cartao
+        AND l.mesAno > :mesAno
+        AND l.tipo.nome = 'DEBITO'
+    """)
+    BigDecimal calcularParcelasFuturasPorCartao(CartaoORM cartao, String mesAno);
 }

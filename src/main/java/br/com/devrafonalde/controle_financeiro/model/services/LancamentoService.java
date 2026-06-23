@@ -32,7 +32,7 @@ public class LancamentoService {
         CartaoORM cartao = cartaoRepository.findById(lancamento.getCartao().getId()).orElseThrow(() -> new EntityNotFoundException("Cartão não encontrado"));
         PessoaORM pessoa = pessoaRepository.findById(lancamento.getPessoa().getId()).orElseThrow(() -> new EntityNotFoundException("Pessoa não encontrada"));
         CategoriaORM categoria = categoriaRepository.findById(lancamento.getCategoria().getId()).orElseThrow(() -> new EntityNotFoundException("Categoria não encontrada"));
-        TipoLancamentoORM tipoLancamento = tipoLancamentoRepository.findById(lancamento.getTipo().getId()).orElseThrow(() -> new EntityNotFoundException("Tipo de lançamento não encontrada"));
+        TipoLancamentoORM tipoLancamento = tipoLancamentoRepository.findById(lancamento.getTipo().getId()).orElseThrow(() -> new EntityNotFoundException("Tipo de lançamento não encontrado"));
 
         LancamentoORM lancamentoCadastrado = lancamentoRepository.save(LancamentoORM.builder()
                 .conta(conta)
@@ -92,7 +92,7 @@ public class LancamentoService {
         CartaoORM cartao = cartaoRepository.findById(dados.getCartao().getId()).orElseThrow(() -> new EntityNotFoundException("Cartão não encontrado"));
         PessoaORM pessoa = pessoaRepository.findById(dados.getPessoa().getId()).orElseThrow(() -> new EntityNotFoundException("Pessoa não encontrada"));
         CategoriaORM categoria = categoriaRepository.findById(dados.getCategoria().getId()).orElseThrow(() -> new EntityNotFoundException("Categoria não encontrada"));
-        TipoLancamentoORM tipoLancamento = tipoLancamentoRepository.findById(dados.getTipo().getId()).orElseThrow(() -> new EntityNotFoundException("Tipo de lançamento não encontrada"));
+        TipoLancamentoORM tipoLancamento = tipoLancamentoRepository.findById(dados.getTipo().getId()).orElseThrow(() -> new EntityNotFoundException("Tipo de lançamento não encontrado"));
 
         lancamento.setData(dados.getData());
         lancamento.setDescricao(dados.getDescricao());

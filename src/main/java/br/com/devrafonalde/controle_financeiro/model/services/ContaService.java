@@ -1,12 +1,11 @@
 package br.com.devrafonalde.controle_financeiro.model.services;
 
 import br.com.devrafonalde.controle_financeiro.model.entities.dto.ContaDTO;
-import br.com.devrafonalde.controle_financeiro.model.entities.orm.ContaORM;
-import br.com.devrafonalde.controle_financeiro.model.entities.orm.LancamentoORM;
-import br.com.devrafonalde.controle_financeiro.model.entities.orm.PessoaORM;
+import br.com.devrafonalde.controle_financeiro.model.entities.orm.*;
 import br.com.devrafonalde.controle_financeiro.model.repositories.ContaRepository;
 import br.com.devrafonalde.controle_financeiro.model.repositories.LancamentosRepository;
 import br.com.devrafonalde.controle_financeiro.model.repositories.PessoaRepository;
+import br.com.devrafonalde.controle_financeiro.model.repositories.TipoContaRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -21,6 +20,7 @@ public class ContaService {
     private final ContaRepository contaRepository;
     private final PessoaRepository pessoaRepository;
     private final LancamentosRepository lancamentoRepository;
+    private final TipoContaRepository tipoContaRepository;
     private final ModelMapper modelMapper;
 
     public ContaDTO cadastrar(ContaDTO conta) {
@@ -29,9 +29,10 @@ public class ContaService {
         if (contaRepository.existsByNomeAndTitular(conta.getNome(), titular)) {
             throw new IllegalArgumentException("Essa pessoa já possui uma conta com esse nome.");
         }
+        TipoContaORM tipoConta = tipoContaRepository.findById(conta.getTipo().getId()).orElseThrow(() -> new EntityNotFoundException("Tipo de conta não encontrado"));
 
         ContaORM contaCadastrada = contaRepository.save(ContaORM.builder()
-                .tipo(conta.getTipo())
+                .tipo(tipoConta)
                 .banco(conta.getBanco())
                 .nome(conta.getNome())
                 .saldoInicial(BigDecimal.ZERO)
@@ -62,9 +63,10 @@ public class ContaService {
 
     public ContaDTO atualizar(Long id, ContaDTO dados) {
         ContaORM conta = contaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada"));
+        TipoContaORM tipoConta = tipoContaRepository.findById(conta.getTipo().getId()).orElseThrow(() -> new EntityNotFoundException("Tipo de conta não encontrado"));
         conta.setNome(dados.getNome());
         conta.setBanco(dados.getBanco());
-        conta.setTipo(dados.getTipo());
+        conta.setTipo(tipoConta);
         return modelMapper.map(contaRepository.save(conta), ContaDTO.class);
     }
 
@@ -85,21 +87,23 @@ public class ContaService {
     }
 
     private BigDecimal calcularImpactoNaConta(LancamentoORM lancamento, ContaORM conta) {
-        return switch (lancamento.getTipo()) {
-            case CREDITO -> lancamento.getConta().equals(conta)
+        String tipo = lancamento.getTipo().getNome();
+        return switch (tipo) {
+            case "CREDITO" -> conta.equals(lancamento.getConta())
                     ? lancamento.getValor()
                     : BigDecimal.ZERO;
-            case DEBITO -> lancamento.getConta().equals(conta)
+            case "DEBITO" -> conta.equals(lancamento.getConta())
                     ? lancamento.getValor().negate()
                     : BigDecimal.ZERO;
-            case TRANSFERENCIA -> {
-                if (lancamento.getConta().equals(conta))
+            case "TRANSFERENCIA" -> {
+                if (lancamento.getConta() != null && lancamento.getConta().equals(conta))
                     yield lancamento.getValor().negate();
-                if (lancamento.getContaDestino().equals(conta))
+                if (lancamento.getContaDestino() != null && lancamento.getContaDestino().equals(conta))
                     yield lancamento.getValor();
                 yield BigDecimal.ZERO;
             }
-            case CARTAO -> BigDecimal.ZERO;
+            case "CARTAO" -> BigDecimal.ZERO;
+            default -> throw new IllegalStateException("Tipo de lançamento desconhecido: " + tipo);
         };
     }
 }

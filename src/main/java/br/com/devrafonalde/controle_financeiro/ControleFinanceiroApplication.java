@@ -11,4 +11,5 @@ public class ControleFinanceiroApplication {
 
 	// TODO Criar método de pagar fatura (se parcelado, informar quantas parcelas e valor de cada uma) que já cria o lançamento e libera o limite pro mês seguinte
 	// TODO Limite do cartão de um mês é condicionado ao pagamento da fatura do mês anterior
+	// TODO Método para lembrar de pagar a fatura
 }
