@@ -10,7 +10,6 @@ import java.util.concurrent.Executor;
 @Configuration
 @EnableAsync
 public class AsyncConfig {
-
     @Bean(name = "historicoExecutor")
     public Executor historicoExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
