@@ -3,9 +3,9 @@ package br.com.devrafonalde.controle_financeiro.model.services;
 import br.com.devrafonalde.controle_financeiro.model.entities.dto.DespesaFixaDTO;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.ContaORM;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.DespesaFixaORM;
+import br.com.devrafonalde.controle_financeiro.model.exceptions.ElementoNaoEncontradoException;
 import br.com.devrafonalde.controle_financeiro.model.repositories.ContaRepository;
 import br.com.devrafonalde.controle_financeiro.model.repositories.DespesaFixaRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ public class DespesaFixaService {
     private final ModelMapper modelMapper;
 
     public DespesaFixaDTO cadastrar(DespesaFixaDTO despesaFixa) {
-        ContaORM conta = contaRepository.findById(despesaFixa.getConta().getId()).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada"));
+        ContaORM conta = contaRepository.findById(despesaFixa.getConta().getId()).orElseThrow(() -> new ElementoNaoEncontradoException("Conta não encontrada"));
 
         DespesaFixaORM despesaCadastrada = despesaFixaRepository.save(DespesaFixaORM.builder()
                 .valor(despesaFixa.getValor())
@@ -40,7 +40,7 @@ public class DespesaFixaService {
     }
 
     public List<DespesaFixaDTO> listarPorConta(Long contaId) {
-        ContaORM conta = contaRepository.findById(contaId).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada"));
+        ContaORM conta = contaRepository.findById(contaId).orElseThrow(() -> new ElementoNaoEncontradoException("Conta não encontrada"));
         return despesaFixaRepository.findByConta(conta).stream()
                 .map(despesaFixaORM -> modelMapper.map(despesaFixaORM, DespesaFixaDTO.class))
                 .toList();
@@ -48,13 +48,13 @@ public class DespesaFixaService {
 
     public DespesaFixaDTO buscarPorId(Long id) {
         return modelMapper.map(despesaFixaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Despesa fixa não encontrada: " + id)), DespesaFixaDTO.class);
+                .orElseThrow(() -> new ElementoNaoEncontradoException("Despesa fixa não encontrada: " + id)), DespesaFixaDTO.class);
     }
 
     public DespesaFixaDTO atualizar(Long id, DespesaFixaDTO dados) {
         DespesaFixaORM despesa = despesaFixaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Despesa fixa não encontrada: " + id));
-        ContaORM conta = contaRepository.findById(dados.getConta().getId()).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada"));
+                .orElseThrow(() -> new ElementoNaoEncontradoException("Despesa fixa não encontrada: " + id));
+        ContaORM conta = contaRepository.findById(dados.getConta().getId()).orElseThrow(() -> new ElementoNaoEncontradoException("Conta não encontrada"));
 
         despesa.setNome(dados.getNome());
         despesa.setValor(dados.getValor());
@@ -68,7 +68,7 @@ public class DespesaFixaService {
     }
 
     public BigDecimal calcularTotalFixosPorConta(Long contaId) {
-        ContaORM conta = contaRepository.findById(contaId).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada"));
+        ContaORM conta = contaRepository.findById(contaId).orElseThrow(() -> new ElementoNaoEncontradoException("Conta não encontrada"));
         return despesaFixaRepository.sumValorByConta(conta)
                 .orElse(BigDecimal.ZERO);
     }

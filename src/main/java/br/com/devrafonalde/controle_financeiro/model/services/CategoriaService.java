@@ -2,8 +2,9 @@ package br.com.devrafonalde.controle_financeiro.model.services;
 
 import br.com.devrafonalde.controle_financeiro.model.entities.dto.CategoriaDTO;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.CategoriaORM;
+import br.com.devrafonalde.controle_financeiro.model.exceptions.AtributoJaUtilizadoException;
+import br.com.devrafonalde.controle_financeiro.model.exceptions.ElementoNaoEncontradoException;
 import br.com.devrafonalde.controle_financeiro.model.repositories.CategoriaRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Sort;
@@ -19,7 +20,7 @@ public class CategoriaService {
 
     public CategoriaDTO cadastrar(String nome) {
         if (categoriaRepository.existsByNome(nome)) {
-            throw new IllegalArgumentException("CategoriaORM já existe: " + nome);
+            throw new AtributoJaUtilizadoException("CategoriaORM já existe: " + nome);
         }
         CategoriaORM categoria = new CategoriaORM();
         categoria.setNome(nome);
@@ -32,7 +33,7 @@ public class CategoriaService {
 
     public CategoriaDTO buscarPorId(Long id) {
         return modelMapper.map(categoriaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("CategoriaORM não encontrada: " + id)), CategoriaDTO.class);
+                .orElseThrow(() -> new ElementoNaoEncontradoException("CategoriaORM não encontrada: " + id)), CategoriaDTO.class);
     }
 
     public CategoriaDTO atualizar(Long id, String novoNome) {
@@ -42,10 +43,10 @@ public class CategoriaService {
         }
 
         if (categoriaRepository.existsByNome(novoNome)) {
-            throw new IllegalArgumentException("Já existe uma categoria com esse nome.");
+            throw new AtributoJaUtilizadoException("Já existe uma categoria com esse nome.");
         }
         CategoriaORM categoria = categoriaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("CategoriaORM não encontrada: " + id));
+                .orElseThrow(() -> new ElementoNaoEncontradoException("CategoriaORM não encontrada: " + id));
         categoria.setNome(novoNome);
         return modelMapper.map(categoriaRepository.save(categoria), CategoriaDTO.class);
     }
@@ -53,7 +54,7 @@ public class CategoriaService {
     public void remover(Long id) {
         CategoriaDTO categoria = buscarPorId(id);
         if (categoria.getNome().equals("Pagamento Fatura")) {
-            throw new IllegalArgumentException("A categoria \"Pagamento Fatura\" não pode ser removida.");
+            throw new AtributoJaUtilizadoException("A categoria \"Pagamento Fatura\" não pode ser removida.");
         }
 
         categoriaRepository.deleteById(id);

@@ -2,8 +2,8 @@ package br.com.devrafonalde.controle_financeiro.model.services;
 
 import br.com.devrafonalde.controle_financeiro.model.entities.dto.PessoaDTO;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.PessoaORM;
+import br.com.devrafonalde.controle_financeiro.model.exceptions.ElementoNaoEncontradoException;
 import br.com.devrafonalde.controle_financeiro.model.repositories.PessoaRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -31,12 +31,12 @@ public class PessoaService {
 
     public PessoaDTO buscarPorId(Long id) {
         return modelMapper.map(pessoaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Pessoa não encontrada: " + id)), PessoaDTO.class);
+                .orElseThrow(() -> new ElementoNaoEncontradoException("Pessoa não encontrada: " + id)), PessoaDTO.class);
     }
 
     public PessoaDTO atualizar(Long id, PessoaDTO dados) {
         PessoaORM pessoa = pessoaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Pessoa não encontrada: " + id));
+                .orElseThrow(() -> new ElementoNaoEncontradoException("Pessoa não encontrada: " + id));
         pessoa.setNome(dados.getNome());
         return modelMapper.map(pessoaRepository.save(pessoa), PessoaDTO.class);
     }

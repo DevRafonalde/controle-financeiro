@@ -1,12 +1,15 @@
 package br.com.devrafonalde.controle_financeiro.model.services;
 
 import br.com.devrafonalde.controle_financeiro.model.entities.dto.ContaDTO;
-import br.com.devrafonalde.controle_financeiro.model.entities.orm.*;
+import br.com.devrafonalde.controle_financeiro.model.entities.orm.ContaORM;
+import br.com.devrafonalde.controle_financeiro.model.entities.orm.LancamentoORM;
+import br.com.devrafonalde.controle_financeiro.model.entities.orm.PessoaORM;
+import br.com.devrafonalde.controle_financeiro.model.entities.orm.TipoContaORM;
+import br.com.devrafonalde.controle_financeiro.model.exceptions.ElementoNaoEncontradoException;
 import br.com.devrafonalde.controle_financeiro.model.repositories.ContaRepository;
 import br.com.devrafonalde.controle_financeiro.model.repositories.LancamentosRepository;
 import br.com.devrafonalde.controle_financeiro.model.repositories.PessoaRepository;
 import br.com.devrafonalde.controle_financeiro.model.repositories.TipoContaRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -24,12 +27,12 @@ public class ContaService {
     private final ModelMapper modelMapper;
 
     public ContaDTO cadastrar(ContaDTO conta) {
-        PessoaORM titular = pessoaRepository.findById(conta.getTitular().getId()).orElseThrow(() -> new EntityNotFoundException("Pessoa não encontrada"));
+        PessoaORM titular = pessoaRepository.findById(conta.getTitular().getId()).orElseThrow(() -> new ElementoNaoEncontradoException("Pessoa não encontrada"));
 
         if (contaRepository.existsByNomeAndTitular(conta.getNome(), titular)) {
             throw new IllegalArgumentException("Essa pessoa já possui uma conta com esse nome.");
         }
-        TipoContaORM tipoConta = tipoContaRepository.findById(conta.getTipo().getId()).orElseThrow(() -> new EntityNotFoundException("Tipo de conta não encontrado"));
+        TipoContaORM tipoConta = tipoContaRepository.findById(conta.getTipo().getId()).orElseThrow(() -> new ElementoNaoEncontradoException("Tipo de conta não encontrado"));
 
         ContaORM contaCadastrada = contaRepository.save(ContaORM.builder()
                 .tipo(tipoConta)
@@ -50,7 +53,7 @@ public class ContaService {
     }
 
     public List<ContaDTO> listarPorTitular(Long pessoaId) {
-        PessoaORM titular = pessoaRepository.findById(pessoaId).orElseThrow(() -> new EntityNotFoundException("Pessoa não encontrada"));
+        PessoaORM titular = pessoaRepository.findById(pessoaId).orElseThrow(() -> new ElementoNaoEncontradoException("Pessoa não encontrada"));
         return contaRepository.findByTitular(titular).stream()
                 .map(contaORM -> modelMapper.map(contaORM, ContaDTO.class))
                 .toList();
@@ -58,12 +61,12 @@ public class ContaService {
 
     public ContaDTO buscarPorId(Long id) {
         return modelMapper.map(contaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("ContaORM não encontrada: " + id)), ContaDTO.class);
+                .orElseThrow(() -> new ElementoNaoEncontradoException("ContaORM não encontrada: " + id)), ContaDTO.class);
     }
 
     public ContaDTO atualizar(Long id, ContaDTO dados) {
-        ContaORM conta = contaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada"));
-        TipoContaORM tipoConta = tipoContaRepository.findById(conta.getTipo().getId()).orElseThrow(() -> new EntityNotFoundException("Tipo de conta não encontrado"));
+        ContaORM conta = contaRepository.findById(id).orElseThrow(() -> new ElementoNaoEncontradoException("Conta não encontrada"));
+        TipoContaORM tipoConta = tipoContaRepository.findById(conta.getTipo().getId()).orElseThrow(() -> new ElementoNaoEncontradoException("Tipo de conta não encontrado"));
         conta.setNome(dados.getNome());
         conta.setBanco(dados.getBanco());
         conta.setTipo(tipoConta);
@@ -76,7 +79,7 @@ public class ContaService {
     }
 
     public BigDecimal calcularSaldoAtual(Long contaId) {
-        ContaORM conta = contaRepository.findById(contaId).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada"));
+        ContaORM conta = contaRepository.findById(contaId).orElseThrow(() -> new ElementoNaoEncontradoException("Conta não encontrada"));
         BigDecimal movimentacaoTotal = lancamentoRepository
                 .findAll()
                 .stream()

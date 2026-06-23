@@ -3,8 +3,8 @@ package br.com.devrafonalde.controle_financeiro.model.services;
 import br.com.devrafonalde.controle_financeiro.model.entities.dto.PagamentoFaturaRequest;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.*;
 import br.com.devrafonalde.controle_financeiro.model.events.LancamentoSalvoEvent;
+import br.com.devrafonalde.controle_financeiro.model.exceptions.ElementoNaoEncontradoException;
 import br.com.devrafonalde.controle_financeiro.model.repositories.*;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -31,14 +31,14 @@ public class PagamentoFaturaService {
 
     public PagamentoFaturaORM pagar(PagamentoFaturaRequest request) {
         CartaoORM cartao = cartaoRepository.findById(request.cartaoId())
-                .orElseThrow(() -> new EntityNotFoundException("Cartão não encontrado."));
+                .orElseThrow(() -> new ElementoNaoEncontradoException("Cartão não encontrado."));
 
         ContaORM conta = contaRepository.findById(request.contaId())
-                .orElseThrow(() -> new EntityNotFoundException("Conta não encontrada."));
+                .orElseThrow(() -> new ElementoNaoEncontradoException("Conta não encontrada."));
 
         TipoPagamentoFaturaORM tipoPagamento = tipoPagamentoFaturaRepository
                 .findByNome(request.tipoPagamento())
-                .orElseThrow(() -> new EntityNotFoundException("Tipo de pagamento inválido."));
+                .orElseThrow(() -> new ElementoNaoEncontradoException("Tipo de pagamento inválido."));
 
         BigDecimal valorOriginal = lancamentoRepository
                 .calcularFaturaCartao(cartao, request.mesAnoFatura());
@@ -144,10 +144,10 @@ public class PagamentoFaturaService {
                                              Integer parcelaAtual,
                                              Integer numParcelas) {
         TipoLancamentoORM tipoDebito = tipoLancamentoRepository.findByNome("DEBITO")
-                .orElseThrow(() -> new EntityNotFoundException("Tipo DEBITO não encontrado."));
+                .orElseThrow(() -> new ElementoNaoEncontradoException("Tipo DEBITO não encontrado."));
 
         CategoriaORM categoria = categoriaRepository.findByNome(CATEGORIA_PAGAMENTO_FATURA)
-                .orElseThrow(() -> new EntityNotFoundException("Categoria de pagamento não encontrada."));
+                .orElseThrow(() -> new ElementoNaoEncontradoException("Categoria de pagamento não encontrada."));
 
         LancamentoORM lancamento = new LancamentoORM();
         lancamento.setData(LocalDate.now());
@@ -165,7 +165,7 @@ public class PagamentoFaturaService {
 
     public BigDecimal calcularSaldoPendente(Long cartaoId, String mesAnoFatura) {
         CartaoORM cartao = cartaoRepository.findById(cartaoId)
-                .orElseThrow(() -> new EntityNotFoundException("Cartão não encontrado."));
+                .orElseThrow(() -> new ElementoNaoEncontradoException("Cartão não encontrado."));
 
         BigDecimal valorFatura = lancamentoRepository
                 .calcularFaturaCartao(cartao, mesAnoFatura);
@@ -173,14 +173,14 @@ public class PagamentoFaturaService {
         BigDecimal valorJaPago = pagamentoFaturaRepository
                 .sumValorPagoPorFatura(cartao, mesAnoFatura);
 
-        // ATENÇÃO FRONT: o saldo pendente não inclui juros por atraso.
-        // Exibir aviso ao usuário de que o valor real cobrado pelo banco pode ser maior.
+        // TODO ATENÇÃO FRONT: o saldo pendente não inclui juros por atraso.
+        // TODO Exibir aviso ao usuário de que o valor real cobrado pelo banco pode ser maior.
         return valorFatura.subtract(valorJaPago);
     }
 
     public BigDecimal calcularLimiteDisponivel(Long cartaoId, String mesAno) {
         CartaoORM cartao = cartaoRepository.findById(cartaoId)
-                .orElseThrow(() -> new EntityNotFoundException("Cartão não encontrado."));
+                .orElseThrow(() -> new ElementoNaoEncontradoException("Cartão não encontrado."));
 
         // Lançamentos CARTAO do mês ainda sem pagamento = comprometem o limite
         BigDecimal faturaAberta = lancamentoRepository
