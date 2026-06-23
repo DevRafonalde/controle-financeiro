@@ -9,9 +9,6 @@ public class ControleFinanceiroApplication {
 		SpringApplication.run(ControleFinanceiroApplication.class, args);
 	}
 
-	// TODO Verificar a questão de fechar o mês
-	// TODO Transformar todos os ENUMS em tabela
-	// TODO Criar tabela de categorias
 	// TODO Criar método de pagar fatura (se parcelado, informar quantas parcelas e valor de cada uma) que já cria o lançamento e libera o limite pro mês seguinte
 	// TODO Limite do cartão de um mês é condicionado ao pagamento da fatura do mês anterior
 }

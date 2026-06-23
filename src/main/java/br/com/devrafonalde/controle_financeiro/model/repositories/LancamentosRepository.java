@@ -1,10 +1,6 @@
 package br.com.devrafonalde.controle_financeiro.model.repositories;
 
-import br.com.devrafonalde.controle_financeiro.model.entities.TipoLancamento;
-import br.com.devrafonalde.controle_financeiro.model.entities.orm.CartaoORM;
-import br.com.devrafonalde.controle_financeiro.model.entities.orm.ContaORM;
-import br.com.devrafonalde.controle_financeiro.model.entities.orm.LancamentoORM;
-import br.com.devrafonalde.controle_financeiro.model.entities.orm.PessoaORM;
+import br.com.devrafonalde.controle_financeiro.model.entities.orm.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -14,7 +10,7 @@ import java.util.List;
 public interface LancamentosRepository extends JpaRepository<LancamentoORM, Long> {
     List<LancamentoORM> findByMesAnoOrderByDataAsc(String mesAno);
     List<LancamentoORM> findByMesAnoAndPessoa(String mesAno, PessoaORM pessoa);
-    List<LancamentoORM> findByMesAnoAndTipo(String mesAno, TipoLancamento tipo);
+    List<LancamentoORM> findByMesAnoAndTipo(String mesAno, TipoLancamentoORM tipo);
     List<LancamentoORM> findByCartaoAndMesAno(CartaoORM cartao, String mesAno);
     List<LancamentoORM> findByContaAndMesAno(ContaORM conta, String mesAno);
 
@@ -23,10 +19,10 @@ public interface LancamentosRepository extends JpaRepository<LancamentoORM, Long
     @Query("""
         SELECT COALESCE(SUM(
             CASE
-                WHEN l.tipo = 'CREDITO' AND l.conta = :conta THEN l.valor
-                WHEN l.tipo = 'DEBITO'  AND l.conta = :conta THEN -l.valor
-                WHEN l.tipo = 'TRANSFERENCIA' AND l.conta        = :conta THEN -l.valor
-                WHEN l.tipo = 'TRANSFERENCIA' AND l.contaDestino = :conta THEN  l.valor
+                WHEN l.tipo.nome = 'CREDITO' AND l.conta = :conta THEN l.valor
+                WHEN l.tipo.nome = 'DEBITO'  AND l.conta = :conta THEN -l.valor
+                WHEN l.tipo.nome = 'TRANSFERENCIA' AND l.conta        = :conta THEN -l.valor
+                WHEN l.tipo.nome = 'TRANSFERENCIA' AND l.contaDestino = :conta THEN  l.valor
                 ELSE 0
             END
         ), 0)
@@ -41,7 +37,7 @@ public interface LancamentosRepository extends JpaRepository<LancamentoORM, Long
         FROM Lancamento l
         WHERE l.cartao = :cartao
         AND l.mesAno = :mesAno
-        AND l.tipo = 'CARTAO'
+        AND l.tipo.nome = 'CARTAO'
     """)
     BigDecimal calcularFaturaCartao(CartaoORM cartao, String mesAno);
 
@@ -51,7 +47,7 @@ public interface LancamentosRepository extends JpaRepository<LancamentoORM, Long
         FROM Lancamento l
         WHERE l.pessoa = :pessoa
         AND l.mesAno = :mesAno
-        AND l.tipo IN ('DEBITO', 'CARTAO')
+        AND l.tipo.nome IN ('DEBITO', 'CARTAO')
     """)
     BigDecimal calcularTotalGastoPorPessoa(PessoaORM pessoa, String mesAno);
 
@@ -60,7 +56,7 @@ public interface LancamentosRepository extends JpaRepository<LancamentoORM, Long
         SELECT l.categoria, COALESCE(SUM(l.valor), 0)
         FROM Lancamento l
         WHERE l.mesAno = :mesAno
-        AND l.tipo IN ('DEBITO', 'CARTAO')
+        AND l.tipo.nome IN ('DEBITO', 'CARTAO')
         GROUP BY l.categoria
         ORDER BY SUM(l.valor) DESC
     """)
@@ -71,7 +67,7 @@ public interface LancamentosRepository extends JpaRepository<LancamentoORM, Long
         SELECT COALESCE(SUM(l.valor), 0)
         FROM Lancamento l
         WHERE l.mesAno = :mesAno
-        AND l.tipo = 'CREDITO'
+        AND l.tipo.nome = 'CREDITO'
     """)
     BigDecimal calcularReceitasTotais(String mesAno);
 
@@ -80,7 +76,7 @@ public interface LancamentosRepository extends JpaRepository<LancamentoORM, Long
         SELECT COALESCE(SUM(l.valor), 0)
         FROM Lancamento l
         WHERE l.mesAno = :mesAno
-        AND l.tipo IN ('DEBITO', 'CARTAO')
+        AND l.tipo.nome IN ('DEBITO', 'CARTAO')
     """)
     BigDecimal calcularDespesasTotais(String mesAno);
 }

@@ -1,6 +1,5 @@
 package br.com.devrafonalde.controle_financeiro.model.entities.orm;
 
-import br.com.devrafonalde.controle_financeiro.model.entities.TipoLancamento;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,18 +26,19 @@ public class LancamentoORM {
     @Column(nullable = false)
     private String descricao;
 
-    @Column(nullable = false)
-    private String categoria;
-
     @Column(name = "mes_ano", nullable = false)
     private String mesAno;
 
     @Column(nullable = false)
     private BigDecimal valor;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TipoLancamento tipo;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "tipo_id")
+    private TipoLancamentoORM tipo;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "categoria_id")
+    private CategoriaORM categoria;
 
     @ManyToOne
     @JoinColumn(name = "conta_id")

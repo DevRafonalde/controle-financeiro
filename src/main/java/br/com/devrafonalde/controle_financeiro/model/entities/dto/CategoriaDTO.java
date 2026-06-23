@@ -9,10 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ContaDTO {
+public class CategoriaDTO {
     private Long id;
     private String nome;
-    private String banco;
-    private TipoContaDTO tipo;
-    private PessoaDTO titular;
 }

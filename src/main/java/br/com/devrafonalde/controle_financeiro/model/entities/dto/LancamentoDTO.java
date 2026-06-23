@@ -1,6 +1,5 @@
 package br.com.devrafonalde.controle_financeiro.model.entities.dto;
 
-import br.com.devrafonalde.controle_financeiro.model.entities.TipoLancamento;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,10 +16,10 @@ public class LancamentoDTO {
     private Long id;
     private LocalDate data;
     private String descricao;
-    private String categoria;
+    private CategoriaDTO categoria;
     private String mesAno;
     private BigDecimal valor;
-    private TipoLancamento tipo;
+    private TipoLancamentoDTO tipo;
     private ContaDTO conta;
     private ContaDTO contaDestino;
     private CartaoDTO cartao;

@@ -1,15 +1,9 @@
 package br.com.devrafonalde.controle_financeiro.model.services;
 
 import br.com.devrafonalde.controle_financeiro.model.entities.dto.LancamentoDTO;
-import br.com.devrafonalde.controle_financeiro.model.entities.orm.CartaoORM;
-import br.com.devrafonalde.controle_financeiro.model.entities.orm.ContaORM;
-import br.com.devrafonalde.controle_financeiro.model.entities.orm.LancamentoORM;
-import br.com.devrafonalde.controle_financeiro.model.entities.orm.PessoaORM;
+import br.com.devrafonalde.controle_financeiro.model.entities.orm.*;
 import br.com.devrafonalde.controle_financeiro.model.events.LancamentoSalvoEvent;
-import br.com.devrafonalde.controle_financeiro.model.repositories.CartaoRepository;
-import br.com.devrafonalde.controle_financeiro.model.repositories.ContaRepository;
-import br.com.devrafonalde.controle_financeiro.model.repositories.LancamentosRepository;
-import br.com.devrafonalde.controle_financeiro.model.repositories.PessoaRepository;
+import br.com.devrafonalde.controle_financeiro.model.repositories.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -25,6 +19,8 @@ public class LancamentoService {
     private final ContaRepository contaRepository;
     private final CartaoRepository cartaoRepository;
     private final PessoaRepository pessoaRepository;
+    private final TipoLancamentoRepository tipoLancamentoRepository;
+    private final CategoriaRepository categoriaRepository;
     private final ModelMapper modelMapper;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -35,15 +31,17 @@ public class LancamentoService {
         ContaORM contaDestino = contaRepository.findById(lancamento.getConta().getId()).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada"));
         CartaoORM cartao = cartaoRepository.findById(lancamento.getCartao().getId()).orElseThrow(() -> new EntityNotFoundException("Cartão não encontrado"));
         PessoaORM pessoa = pessoaRepository.findById(lancamento.getPessoa().getId()).orElseThrow(() -> new EntityNotFoundException("Pessoa não encontrada"));
+        CategoriaORM categoria = categoriaRepository.findById(lancamento.getCategoria().getId()).orElseThrow(() -> new EntityNotFoundException("Categoria não encontrada"));
+        TipoLancamentoORM tipoLancamento = tipoLancamentoRepository.findById(lancamento.getTipo().getId()).orElseThrow(() -> new EntityNotFoundException("Tipo de lançamento não encontrada"));
 
         LancamentoORM lancamentoCadastrado = lancamentoRepository.save(LancamentoORM.builder()
                 .conta(conta)
                 .data(lancamento.getData())
                 .cartao(cartao)
-                .categoria(lancamento.getCategoria())
+                .categoria(categoria)
                 .contaDestino(contaDestino)
                 .descricao(lancamento.getDescricao())
-                .tipo(lancamento.getTipo())
+                .tipo(tipoLancamento)
                 .mesAno(lancamento.getMesAno())
                 .numParcelas(lancamento.getNumParcelas())
                 .parcelaAtual(lancamento.getParcelaAtual())
@@ -93,13 +91,15 @@ public class LancamentoService {
         ContaORM contaDestino = contaRepository.findById(dados.getConta().getId()).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada"));
         CartaoORM cartao = cartaoRepository.findById(dados.getCartao().getId()).orElseThrow(() -> new EntityNotFoundException("Cartão não encontrado"));
         PessoaORM pessoa = pessoaRepository.findById(dados.getPessoa().getId()).orElseThrow(() -> new EntityNotFoundException("Pessoa não encontrada"));
+        CategoriaORM categoria = categoriaRepository.findById(dados.getCategoria().getId()).orElseThrow(() -> new EntityNotFoundException("Categoria não encontrada"));
+        TipoLancamentoORM tipoLancamento = tipoLancamentoRepository.findById(dados.getTipo().getId()).orElseThrow(() -> new EntityNotFoundException("Tipo de lançamento não encontrada"));
 
         lancamento.setData(dados.getData());
         lancamento.setDescricao(dados.getDescricao());
-        lancamento.setCategoria(dados.getCategoria());
+        lancamento.setCategoria(categoria);
         lancamento.setMesAno(dados.getMesAno());
         lancamento.setValor(dados.getValor());
-        lancamento.setTipo(dados.getTipo());
+        lancamento.setTipo(tipoLancamento);
         lancamento.setConta(conta);
         lancamento.setContaDestino(contaDestino);
         lancamento.setCartao(cartao);
@@ -130,31 +130,33 @@ public class LancamentoService {
     }
 
     private void validar(LancamentoDTO l) {
-        switch (l.getTipo()) {
-            case DEBITO, CREDITO -> {
+        String tipo = l.getTipo().getNome();
+        switch (tipo) {
+            case "DEBITO", "CREDITO" -> {
                 if (l.getConta() == null)
-                    throw new IllegalArgumentException("Lançamentos de débito/crédito exigem uma conta.");
+                    throw new IllegalArgumentException("Débito/crédito exige uma conta.");
                 if (l.getCartao() != null)
-                    throw new IllegalArgumentException("Lançamentos de débito/crédito não podem ter cartão.");
+                    throw new IllegalArgumentException("Débito/crédito não pode ter cartão.");
                 if (l.getContaDestino() != null)
                     throw new IllegalArgumentException("Conta destino é exclusiva de transferências.");
             }
-            case CARTAO -> {
+            case "CARTAO" -> {
                 if (l.getCartao() == null)
-                    throw new IllegalArgumentException("Lançamentos de cartão exigem um cartão.");
+                    throw new IllegalArgumentException("Lançamento de cartão exige um cartão.");
                 if (l.getConta() != null)
-                    throw new IllegalArgumentException("Lançamentos de cartão não devem ter conta.");
+                    throw new IllegalArgumentException("Lançamento de cartão não deve ter conta.");
                 if (l.getContaDestino() != null)
                     throw new IllegalArgumentException("Conta destino é exclusiva de transferências.");
             }
-            case TRANSFERENCIA -> {
+            case "TRANSFERENCIA" -> {
                 if (l.getConta() == null || l.getContaDestino() == null)
-                    throw new IllegalArgumentException("Transferências exigem conta de origem e destino.");
+                    throw new IllegalArgumentException("Transferência exige conta de origem e destino.");
                 if (l.getConta().equals(l.getContaDestino()))
-                    throw new IllegalArgumentException("Conta de origem e destino não podem ser iguais.");
+                    throw new IllegalArgumentException("Origem e destino não podem ser iguais.");
                 if (l.getCartao() != null)
-                    throw new IllegalArgumentException("Transferências não podem ter cartão.");
+                    throw new IllegalArgumentException("Transferência não pode ter cartão.");
             }
+            default -> throw new IllegalArgumentException("Tipo de lançamento inválido: " + tipo);
         }
     }
 }

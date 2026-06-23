@@ -1,5 +1,6 @@
 package br.com.devrafonalde.controle_financeiro.model.services;
 
+import br.com.devrafonalde.controle_financeiro.model.entities.orm.CategoriaORM;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.ContaORM;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.HistoricoSaldoORM;
 import br.com.devrafonalde.controle_financeiro.model.repositories.ContaRepository;
@@ -55,7 +56,7 @@ public class ResumoService {
         List<GastoPorCategoria> gastosPorCategoria = lancamentoRepository
                 .calcularTotalPorCategoria(mesAno)
                 .stream()
-                .map(row -> new GastoPorCategoria((String) row[0], (BigDecimal) row[1]))
+                .map(row -> new GastoPorCategoria((CategoriaORM) row[0], (BigDecimal) row[1]))
                 .toList();
 
         return new ResumoMensal(
@@ -67,6 +68,14 @@ public class ResumoService {
                 saldosPorConta,
                 gastosPorCategoria
         );
+    }
+
+    public List<GastoPorCategoria> calcularGastosPorCategoria(String mesAno) {
+        return lancamentoRepository
+                .calcularTotalPorCategoria(mesAno)
+                .stream()
+                .map(row -> new GastoPorCategoria((CategoriaORM) row[0], (BigDecimal) row[1]))
+                .toList();
     }
 
     private void inicializarHistoricoSeNecessario(String mesAno) {
@@ -105,5 +114,5 @@ public class ResumoService {
 
     public record SaldoConta(ContaORM conta, BigDecimal saldoAtual) {}
 
-    public record GastoPorCategoria(String categoria, BigDecimal total) {}
+    public record GastoPorCategoria(CategoriaORM categoria, BigDecimal total) {}
 }

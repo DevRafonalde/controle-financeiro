@@ -1,6 +1,5 @@
 package br.com.devrafonalde.controle_financeiro.model.entities.orm;
 
-import br.com.devrafonalde.controle_financeiro.model.entities.TipoConta;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,9 +25,9 @@ public class ContaORM {
     @Column(nullable = false)
     private String banco;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TipoConta tipo;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "tipo_id")
+    private TipoContaORM tipo;
 
     @Column(name = "saldo_inicial", nullable = false)
     private BigDecimal saldoInicial;
