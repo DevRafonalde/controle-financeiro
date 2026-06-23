@@ -34,8 +34,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleValidacaoException(ValidacaoException ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("error", ex.getMessage());
-        body.put("status", HttpStatus.UNAUTHORIZED.value());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
         body.put("timestamp", LocalDateTime.now());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 }

@@ -4,6 +4,7 @@ import br.com.devrafonalde.controle_financeiro.model.entities.dto.CartaoDTO;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.CartaoORM;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.ContaORM;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.PessoaORM;
+import br.com.devrafonalde.controle_financeiro.model.exceptions.AtributoJaUtilizadoException;
 import br.com.devrafonalde.controle_financeiro.model.exceptions.ElementoNaoEncontradoException;
 import br.com.devrafonalde.controle_financeiro.model.repositories.CartaoRepository;
 import br.com.devrafonalde.controle_financeiro.model.repositories.ContaRepository;
@@ -29,7 +30,7 @@ public class CartaoService {
         PessoaORM titular = pessoaRepository.findById(cartao.getTitular().getId()).orElseThrow(() -> new ElementoNaoEncontradoException("Pessoa não encontrada."));
 
         if (cartaoRepository.existsByNomeAndTitular(cartao.getNome(), titular)) {
-            throw new IllegalArgumentException("Esse titular já possui um cartão com esse nome.");
+            throw new AtributoJaUtilizadoException("Esse titular já possui um cartão com esse nome.");
         }
 
         ContaORM conta = contaRepository.findById(cartao.getContaPagamento().getId()).orElseThrow(() -> new ElementoNaoEncontradoException("Conta não encontrada."));

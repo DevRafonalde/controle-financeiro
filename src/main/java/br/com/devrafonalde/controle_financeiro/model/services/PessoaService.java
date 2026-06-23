@@ -2,6 +2,7 @@ package br.com.devrafonalde.controle_financeiro.model.services;
 
 import br.com.devrafonalde.controle_financeiro.model.entities.dto.PessoaDTO;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.PessoaORM;
+import br.com.devrafonalde.controle_financeiro.model.exceptions.AtributoJaUtilizadoException;
 import br.com.devrafonalde.controle_financeiro.model.exceptions.ElementoNaoEncontradoException;
 import br.com.devrafonalde.controle_financeiro.model.repositories.PessoaRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ public class PessoaService {
 
     public PessoaDTO cadastrar(PessoaORM pessoa) {
         if (pessoaRepository.existsByNome(pessoa.getNome())) {
-            throw new IllegalArgumentException("Já existe uma pessoa com o nome: " + pessoa.getNome());
+            throw new AtributoJaUtilizadoException("Já existe uma pessoa com o nome: " + pessoa.getNome());
         }
         return modelMapper.map(pessoaRepository.save(pessoa), PessoaDTO.class);
     }

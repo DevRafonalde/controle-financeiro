@@ -4,6 +4,7 @@ import br.com.devrafonalde.controle_financeiro.model.entities.dto.LancamentoDTO;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.*;
 import br.com.devrafonalde.controle_financeiro.model.events.LancamentoSalvoEvent;
 import br.com.devrafonalde.controle_financeiro.model.exceptions.ElementoNaoEncontradoException;
+import br.com.devrafonalde.controle_financeiro.model.exceptions.ValidacaoException;
 import br.com.devrafonalde.controle_financeiro.model.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -134,29 +135,29 @@ public class LancamentoService {
         switch (tipo) {
             case "DEBITO", "CREDITO" -> {
                 if (l.getConta() == null)
-                    throw new IllegalArgumentException("Débito/crédito exige uma conta.");
+                    throw new ValidacaoException("Débito/crédito exige uma conta.");
                 if (l.getCartao() != null)
-                    throw new IllegalArgumentException("Débito/crédito não pode ter cartão.");
+                    throw new ValidacaoException("Débito/crédito não pode ter cartão.");
                 if (l.getContaDestino() != null)
-                    throw new IllegalArgumentException("Conta destino é exclusiva de transferências.");
+                    throw new ValidacaoException("Conta destino é exclusiva de transferências.");
             }
             case "CARTAO" -> {
                 if (l.getCartao() == null)
-                    throw new IllegalArgumentException("Lançamento de cartão exige um cartão.");
+                    throw new ValidacaoException("Lançamento de cartão exige um cartão.");
                 if (l.getConta() != null)
-                    throw new IllegalArgumentException("Lançamento de cartão não deve ter conta.");
+                    throw new ValidacaoException("Lançamento de cartão não deve ter conta.");
                 if (l.getContaDestino() != null)
-                    throw new IllegalArgumentException("Conta destino é exclusiva de transferências.");
+                    throw new ValidacaoException("Conta destino é exclusiva de transferências.");
             }
             case "TRANSFERENCIA" -> {
                 if (l.getConta() == null || l.getContaDestino() == null)
-                    throw new IllegalArgumentException("Transferência exige conta de origem e destino.");
+                    throw new ValidacaoException("Transferência exige conta de origem e destino.");
                 if (l.getConta().equals(l.getContaDestino()))
-                    throw new IllegalArgumentException("Origem e destino não podem ser iguais.");
+                    throw new ValidacaoException("Origem e destino não podem ser iguais.");
                 if (l.getCartao() != null)
-                    throw new IllegalArgumentException("Transferência não pode ter cartão.");
+                    throw new ValidacaoException("Transferência não pode ter cartão.");
             }
-            default -> throw new IllegalArgumentException("Tipo de lançamento inválido: " + tipo);
+            default -> throw new ValidacaoException("Tipo de lançamento inválido: " + tipo);
         }
     }
 }

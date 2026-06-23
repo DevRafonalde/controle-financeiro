@@ -4,6 +4,7 @@ import br.com.devrafonalde.controle_financeiro.model.entities.dto.PagamentoFatur
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.*;
 import br.com.devrafonalde.controle_financeiro.model.events.LancamentoSalvoEvent;
 import br.com.devrafonalde.controle_financeiro.model.exceptions.ElementoNaoEncontradoException;
+import br.com.devrafonalde.controle_financeiro.model.exceptions.ValidacaoException;
 import br.com.devrafonalde.controle_financeiro.model.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -58,7 +59,7 @@ public class PagamentoFaturaService {
             case "TOTAL"     -> gerarLancamentoTotal(pagamento, request, cartao);
             case "PARCELADO" -> gerarLancamentosParcelado(pagamento, request, cartao);
             case "PARCIAL"   -> gerarLancamentoParcial(pagamento, request, cartao);
-            default -> throw new IllegalArgumentException("Tipo de pagamento inválido.");
+            default -> throw new ValidacaoException("Tipo de pagamento inválido.");
         };
 
         pagamento.setLancamentos(lancamentosGerados);
@@ -199,14 +200,14 @@ public class PagamentoFaturaService {
                                   BigDecimal valorOriginal,
                                   String tipoPagamento) {
         if (request.valorPago().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Valor pago deve ser maior que zero.");
+            throw new ValidacaoException("Valor pago deve ser maior que zero.");
         }
         if (tipoPagamento.equals("PARCELADO")) {
             if (request.numParcelas() == null || request.numParcelas() < 2) {
-                throw new IllegalArgumentException("Parcelado exige ao menos 2 parcelas.");
+                throw new ValidacaoException("Parcelado exige ao menos 2 parcelas.");
             }
             if (request.valorPrimeiraParcela() == null || request.valorDemaisParcelas() == null) {
-                throw new IllegalArgumentException("Informe o valor da primeira parcela e das demais.");
+                throw new ValidacaoException("Informe o valor da primeira parcela e das demais.");
             }
         }
     }

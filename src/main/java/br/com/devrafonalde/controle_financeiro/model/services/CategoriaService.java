@@ -4,6 +4,7 @@ import br.com.devrafonalde.controle_financeiro.model.entities.dto.CategoriaDTO;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.CategoriaORM;
 import br.com.devrafonalde.controle_financeiro.model.exceptions.AtributoJaUtilizadoException;
 import br.com.devrafonalde.controle_financeiro.model.exceptions.ElementoNaoEncontradoException;
+import br.com.devrafonalde.controle_financeiro.model.exceptions.ValidacaoException;
 import br.com.devrafonalde.controle_financeiro.model.repositories.CategoriaRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -39,7 +40,7 @@ public class CategoriaService {
     public CategoriaDTO atualizar(Long id, String novoNome) {
         CategoriaDTO categoriaExistente = buscarPorId(id);
         if (categoriaExistente.getNome().equals("Pagamento Fatura")) {
-            throw new IllegalArgumentException("A categoria \"Pagamento Fatura\" não pode ser removida.");
+            throw new ValidacaoException("A categoria \"Pagamento Fatura\" não pode ser removida.");
         }
 
         if (categoriaRepository.existsByNome(novoNome)) {

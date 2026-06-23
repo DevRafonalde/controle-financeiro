@@ -5,7 +5,9 @@ import br.com.devrafonalde.controle_financeiro.model.entities.orm.ContaORM;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.LancamentoORM;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.PessoaORM;
 import br.com.devrafonalde.controle_financeiro.model.entities.orm.TipoContaORM;
+import br.com.devrafonalde.controle_financeiro.model.exceptions.AtributoJaUtilizadoException;
 import br.com.devrafonalde.controle_financeiro.model.exceptions.ElementoNaoEncontradoException;
+import br.com.devrafonalde.controle_financeiro.model.exceptions.ValidacaoException;
 import br.com.devrafonalde.controle_financeiro.model.repositories.ContaRepository;
 import br.com.devrafonalde.controle_financeiro.model.repositories.LancamentosRepository;
 import br.com.devrafonalde.controle_financeiro.model.repositories.PessoaRepository;
@@ -30,7 +32,7 @@ public class ContaService {
         PessoaORM titular = pessoaRepository.findById(conta.getTitular().getId()).orElseThrow(() -> new ElementoNaoEncontradoException("Pessoa não encontrada"));
 
         if (contaRepository.existsByNomeAndTitular(conta.getNome(), titular)) {
-            throw new IllegalArgumentException("Essa pessoa já possui uma conta com esse nome.");
+            throw new AtributoJaUtilizadoException("Essa pessoa já possui uma conta com esse nome.");
         }
         TipoContaORM tipoConta = tipoContaRepository.findById(conta.getTipo().getId()).orElseThrow(() -> new ElementoNaoEncontradoException("Tipo de conta não encontrado"));
 
@@ -106,7 +108,7 @@ public class ContaService {
                 yield BigDecimal.ZERO;
             }
             case "CARTAO" -> BigDecimal.ZERO;
-            default -> throw new IllegalStateException("Tipo de lançamento desconhecido: " + tipo);
+            default -> throw new ValidacaoException("Tipo de lançamento desconhecido: " + tipo);
         };
     }
 }
