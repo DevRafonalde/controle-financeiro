@@ -14,9 +14,9 @@ public interface DespesaFixaRepository extends JpaRepository<DespesaFixaORM, Lon
     List<DespesaFixaORM> findByConta(ContaORM conta);
     List<DespesaFixaORM> findByContaTitular(PessoaORM titular);
 
-    @Query("SELECT SUM(d.valor) FROM DespesaFixa d WHERE d.conta = :conta")
+    @Query("SELECT SUM(d.valor) FROM DespesaFixaORM d WHERE d.conta = :conta")
     Optional<BigDecimal> sumValorByConta(ContaORM conta);
 
-    @Query("SELECT SUM(d.valor) FROM DespesaFixa d")
+    @Query("SELECT SUM(d.valor) FROM DespesaFixaORM d")
     Optional<BigDecimal> sumValorTotal();
 }

@@ -26,7 +26,7 @@ public interface LancamentosRepository extends JpaRepository<LancamentoORM, Long
                 ELSE 0
             END
         ), 0)
-        FROM Lancamento l
+        FROM LancamentoORM l
         WHERE l.mesAno = :mesAno
     """)
     BigDecimal calcularMovimentacaoNaMesAno(ContaORM conta, String mesAno);
@@ -34,7 +34,7 @@ public interface LancamentosRepository extends JpaRepository<LancamentoORM, Long
     // Total da fatura de um cartão em um mês
     @Query("""
         SELECT COALESCE(SUM(l.valor), 0)
-        FROM Lancamento l
+        FROM LancamentoORM l
         WHERE l.cartao = :cartao
         AND l.mesAno = :mesAno
         AND l.tipo.nome = 'CARTAO'
@@ -44,7 +44,7 @@ public interface LancamentosRepository extends JpaRepository<LancamentoORM, Long
     // Total gasto por pessoa em um mês (débitos + cartão)
     @Query("""
         SELECT COALESCE(SUM(l.valor), 0)
-        FROM Lancamento l
+        FROM LancamentoORM l
         WHERE l.pessoa = :pessoa
         AND l.mesAno = :mesAno
         AND l.tipo.nome IN ('DEBITO', 'CARTAO')
@@ -54,7 +54,7 @@ public interface LancamentosRepository extends JpaRepository<LancamentoORM, Long
     // Total gasto por categoria em um mês
     @Query("""
         SELECT l.categoria, COALESCE(SUM(l.valor), 0)
-        FROM Lancamento l
+        FROM LancamentoORM l
         WHERE l.mesAno = :mesAno
         AND l.tipo.nome IN ('DEBITO', 'CARTAO')
         GROUP BY l.categoria
@@ -65,7 +65,7 @@ public interface LancamentosRepository extends JpaRepository<LancamentoORM, Long
     // Receitas totais de um mês
     @Query("""
         SELECT COALESCE(SUM(l.valor), 0)
-        FROM Lancamento l
+        FROM LancamentoORM l
         WHERE l.mesAno = :mesAno
         AND l.tipo.nome = 'CREDITO'
     """)
@@ -74,7 +74,7 @@ public interface LancamentosRepository extends JpaRepository<LancamentoORM, Long
     // Despesas totais de um mês (sem transferências)
     @Query("""
         SELECT COALESCE(SUM(l.valor), 0)
-        FROM Lancamento l
+        FROM LancamentoORM l
         WHERE l.mesAno = :mesAno
         AND l.tipo.nome IN ('DEBITO', 'CARTAO')
     """)
@@ -85,7 +85,7 @@ public interface LancamentosRepository extends JpaRepository<LancamentoORM, Long
     // Representa o limite já comprometido por parcelamentos futuros
         @Query("""
         SELECT COALESCE(SUM(l.valor), 0)
-        FROM Lancamento l
+        FROM LancamentoORM l
         WHERE l.pagamentoFatura.cartao = :cartao
         AND l.mesAno > :mesAno
         AND l.tipo.nome = 'DEBITO'

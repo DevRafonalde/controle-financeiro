@@ -19,7 +19,7 @@ public interface PagamentoFaturaRepository extends JpaRepository<PagamentoFatura
     // Soma do que já foi pago de uma fatura (pode haver pagamentos parciais)
     @Query("""
         SELECT COALESCE(SUM(p.valorPago), 0)
-        FROM PagamentoFatura p
+        FROM PagamentoFaturaORM p
         WHERE p.cartao = :cartao
         AND p.mesAnoFatura = :mesAnoFatura
     """)

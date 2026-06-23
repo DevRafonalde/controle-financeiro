@@ -17,7 +17,7 @@ public interface HistoricoSaldoRepository extends JpaRepository<HistoricoSaldoOR
     // Todos os meses distintos no histórico a partir de mesAno, em ordem cronológica
     @Query("""
         SELECT DISTINCT h.mesAno
-        FROM HistoricoSaldo h
+        FROM HistoricoSaldoORM h
         WHERE h.mesAno >= :mesAno
         ORDER BY h.mesAno ASC
     """)
@@ -25,7 +25,7 @@ public interface HistoricoSaldoRepository extends JpaRepository<HistoricoSaldoOR
 
     // Mês imediatamente anterior no histórico para uma conta
     @Query("""
-        SELECT h FROM HistoricoSaldo h
+        SELECT h FROM HistoricoSaldoORM h
         WHERE h.conta = :conta
         AND h.mesAno < :mesAno
         ORDER BY h.mesAno DESC
